@@ -13,8 +13,30 @@ spec:
         app: log-output
     spec:
       containers:
-        - name: log-output
-          image: ghcr.io/kunkkaharden/log-output:0.2
+        - name: log-writer
+          image: ghcr.io/kunkkaharden/log-output:0.3
+          imagePullPolicy: Always
           env:
-          - name: PORT
-            value: "3000"
+            - name: ROLE
+              value: "writer"
+            - name: LOG_FILE
+              value: "/data/log.txt"
+          volumeMounts:
+            - name: log-data
+              mountPath: /data
+        - name: log-reader
+          image: ghcr.io/kunkkaharden/log-output:0.3
+          imagePullPolicy: Always
+          env:
+            - name: ROLE
+              value: "server"
+            - name: LOG_FILE
+              value: "/data/log.txt"
+            - name: PORT
+              value: "3000"
+          volumeMounts:
+            - name: log-data
+              mountPath: /data
+      volumes:
+        - name: log-data
+          emptyDir: {}
