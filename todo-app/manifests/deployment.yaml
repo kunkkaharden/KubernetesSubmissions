@@ -14,5 +14,8 @@ spec:
     spec:
       containers:
         - name: todo-app
-          image: ghcr.io/kunkkaharden/todo-app:0.1
+          image: ghcr.io/kunkkaharden/todo-app:0.2
           imagePullPolicy: Always
+          env:
+          - name: PORT
+            value: "3000"
