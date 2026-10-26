@@ -3,7 +3,7 @@
 Apply the Deployment to your Kubernetes cluster:
 
 ```bash
-kubectl apply -f manifests/deployment.yaml
+kubectl apply -f manifests/ -R
 ```
 
 To follow the Pod logs in real time:
