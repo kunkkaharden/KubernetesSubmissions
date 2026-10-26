@@ -9,7 +9,7 @@ PORT=3000 go run .
 ```
 
 ```bash
-kubectl apply -f manifests/deployment.yaml
+kubectl apply -f manifests/ -R
 ```
 
 To follow the Pod logs in real time:
