@@ -17,4 +17,5 @@ kubectl apply -f manifests/ -R
 ```
 
 The `/pingpong` path is routed to this application by the shared Ingress in
-`../log-output/manifests/ingress.yaml`.
+`../log-output/manifests/ingress.yaml`. In Kubernetes, the request count is
+stored in `/data/pingpong.txt` on the shared PersistentVolumeClaim.

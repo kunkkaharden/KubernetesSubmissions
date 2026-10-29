@@ -2,14 +2,23 @@
 
 The `log-writer` container generates a random string when it starts and appends
 it with a UTC timestamp to `/data/log.txt` every five seconds. The `log-reader`
-container reads that shared file and returns its contents from `GET /`. Both
-containers run in the same Pod and share an `emptyDir` volume.
+container reads that file and the Ping-pong request count from
+`/data/pingpong.txt`, returning both from `GET /`. Both containers and the
+Ping-pong Pod share a PersistentVolumeClaim.
 
-
-Apply the Deployment to your Kubernetes cluster:
+Prepare and apply the shared PersistentVolume and claim first. Follow the
+instructions in [`persistent-volume/README.md`](../persistent-volume/README.md).
 
 ```bash
-kubectl apply -f manifests/ -R
+kubectl apply -f ../persistent-volume/
+```
+
+Apply Ping-pong before Log output so the latter can be scheduled on the same
+node and share the local hostPath volume:
+
+```bash
+kubectl apply -f ../ping-pong/manifests/
+kubectl apply -f manifests/
 ```
 
 To see the latest file contents:

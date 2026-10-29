@@ -14,8 +14,17 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: ghcr.io/kunkkaharden/ping-pong:0.1
-          imagePullPolicy: Always
+          image: ghcr.io/kunkkaharden/ping-pong:0.2
+          imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "3000"
+            - name: COUNTER_FILE
+              value: "/data/pingpong.txt"
+          volumeMounts:
+            - name: shared-data
+              mountPath: /data
+      volumes:
+        - name: shared-data
+          persistentVolumeClaim:
+            claimName: shared-data

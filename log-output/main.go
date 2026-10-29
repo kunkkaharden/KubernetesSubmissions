@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -14,6 +15,7 @@ import (
 const (
 	defaultPort = "8080"
 	defaultFile = "/data/log.txt"
+	pingPongFile = "/data/pingpong.txt"
 	writePeriod = 5 * time.Second
 )
 
@@ -21,7 +23,7 @@ func currentStatus(randomValue string) string {
 	return fmt.Sprintf("[%s] %s", time.Now().UTC().Format(time.RFC3339), randomValue)
 }
 
-func fileHandler(filePath string) http.Handler {
+func fileHandler(filePath, pingPongFilePath string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.Header().Set("Allow", http.MethodGet)
@@ -41,7 +43,24 @@ func fileHandler(filePath string) http.Handler {
 			return
 		}
 
-		if _, err := w.Write(content); err != nil {
+		counterContent, err := os.ReadFile(pingPongFilePath)
+		if err != nil {
+			log.Printf("read ping-pong counter file %q: %v", pingPongFilePath, err)
+			http.Error(w, "ping-pong counter is not available", http.StatusInternalServerError)
+			return
+		}
+		counter, err := strconv.Atoi(strings.TrimSpace(string(counterContent)))
+		if err != nil || counter < 0 {
+			log.Printf("invalid ping-pong counter in %q: %q", pingPongFilePath, strings.TrimSpace(string(counterContent)))
+			http.Error(w, "ping-pong counter is not available", http.StatusInternalServerError)
+			return
+		}
+
+		if len(content) > 0 && content[len(content)-1] != '\n' {
+			content = append(content, '\n')
+		}
+		response := fmt.Sprintf("%sPing / Pongs: %d\n", content, counter)
+		if _, err := w.Write([]byte(response)); err != nil {
 			log.Printf("write HTTP response: %v", err)
 		}
 	})
@@ -81,7 +100,11 @@ func runServer(filePath string) {
 	}
 
 	mux := http.NewServeMux()
-	mux.Handle("/", fileHandler(filePath))
+	pingPongFilePath := os.Getenv("PINGPONG_FILE")
+	if pingPongFilePath == "" {
+		pingPongFilePath = pingPongFile
+	}
+	mux.Handle("/", fileHandler(filePath, pingPongFilePath))
 
 	address := ":" + strconv.Itoa(portNumber)
 	log.Printf("HTTP server started on port %d", portNumber)
