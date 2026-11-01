@@ -7,6 +7,10 @@ was fetched, so the cache also survives a restart. Once the 10 minutes are
 up, the next request downloads and persists a new image. If Picsum is
 unavailable, the last saved image is served instead.
 
+The page includes a todo input limited to 140 characters, a Send button, and
+example todos. The button is not wired up yet, so todos are not submitted or
+saved.
+
 Run locally:
 
 ```bash
