@@ -2,7 +2,8 @@ FROM golang:1.22-alpine AS build
 
 WORKDIR /src
 COPY go.mod ./
-COPY main.go ./
+COPY *.go ./
+COPY templates/ ./templates/
 RUN CGO_ENABLED=0 go build -o /todo-app .
 
 FROM gcr.io/distroless/static-debian13:nonroot

@@ -12,10 +12,21 @@ spec:
       labels:
         app: todo-app
     spec:
+      securityContext:
+        fsGroup: 65532
       containers:
         - name: todo-app
-          image: ghcr.io/kunkkaharden/todo-app:0.2
+          image: ghcr.io/kunkkaharden/todo-app:0.5
           imagePullPolicy: Always
           env:
           - name: PORT
             value: "3000"
+          - name: IMAGE_CACHE_DIR
+            value: /data
+          volumeMounts:
+          - name: image-cache
+            mountPath: /data
+      volumes:
+      - name: image-cache
+        persistentVolumeClaim:
+          claimName: todo-app-image-cache

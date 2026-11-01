@@ -21,7 +21,7 @@ spec:
               topologyKey: kubernetes.io/hostname
       containers:
         - name: log-writer
-          image: ghcr.io/kunkkaharden/log-output:0.3
+          image: ghcr.io/kunkkaharden/log-output:0.4
           imagePullPolicy: IfNotPresent
           env:
             - name: ROLE
