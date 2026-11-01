@@ -1,130 +1,22 @@
 package main
 
 import (
-	"fmt"
+	"cmp"
 	"log"
-	"net/http"
 	"os"
-	"strconv"
-	"strings"
-	"time"
-
-	"github.com/google/uuid"
 )
 
-const (
-	defaultPort = "8080"
-	defaultFile = "/data/log.txt"
-	pingPongFile = "/data/pingpong.txt"
-	writePeriod = 5 * time.Second
-)
-
-func currentStatus(randomValue string) string {
-	return fmt.Sprintf("[%s] %s", time.Now().UTC().Format(time.RFC3339), randomValue)
-}
-
-func fileHandler(filePath, pingPongFilePath string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Method != http.MethodGet {
-			w.Header().Set("Allow", http.MethodGet)
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-			return
-		}
-
-		if r.URL.Path != "/" {
-			http.NotFound(w, r)
-			return
-		}
-
-		content, err := os.ReadFile(filePath)
-		if err != nil {
-			log.Printf("read log file %q: %v", filePath, err)
-			http.Error(w, "log file is not available", http.StatusInternalServerError)
-			return
-		}
-
-		counterContent, err := os.ReadFile(pingPongFilePath)
-		if err != nil {
-			log.Printf("read ping-pong counter file %q: %v", pingPongFilePath, err)
-			http.Error(w, "ping-pong counter is not available", http.StatusInternalServerError)
-			return
-		}
-		counter, err := strconv.Atoi(strings.TrimSpace(string(counterContent)))
-		if err != nil || counter < 0 {
-			log.Printf("invalid ping-pong counter in %q: %q", pingPongFilePath, strings.TrimSpace(string(counterContent)))
-			http.Error(w, "ping-pong counter is not available", http.StatusInternalServerError)
-			return
-		}
-
-		if len(content) > 0 && content[len(content)-1] != '\n' {
-			content = append(content, '\n')
-		}
-		response := fmt.Sprintf("%sPing / Pongs: %d\n", content, counter)
-		if _, err := w.Write([]byte(response)); err != nil {
-			log.Printf("write HTTP response: %v", err)
-		}
-	})
-}
-
-func runWriter(filePath string) {
-	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o644)
-	if err != nil {
-		log.Fatalf("open log file %q: %v", filePath, err)
-	}
-	defer file.Close()
-
-	randomValue := uuid.NewString()
-	writeLine := func() {
-		if _, err := fmt.Fprintln(file, currentStatus(randomValue)); err != nil {
-			log.Fatalf("write log file %q: %v", filePath, err)
-		}
-	}
-
-	writeLine()
-	ticker := time.NewTicker(writePeriod)
-	defer ticker.Stop()
-	for range ticker.C {
-		writeLine()
-	}
-}
-
-func runServer(filePath string) {
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = defaultPort
-	}
-
-	portNumber, err := strconv.Atoi(port)
-	if err != nil || portNumber < 1 || portNumber > 65535 {
-		log.Fatalf("invalid PORT %q: must be a number between 1 and 65535", port)
-	}
-
-	mux := http.NewServeMux()
-	pingPongFilePath := os.Getenv("PINGPONG_FILE")
-	if pingPongFilePath == "" {
-		pingPongFilePath = pingPongFile
-	}
-	mux.Handle("/", fileHandler(filePath, pingPongFilePath))
-
-	address := ":" + strconv.Itoa(portNumber)
-	log.Printf("HTTP server started on port %d", portNumber)
-	if err := http.ListenAndServe(address, mux); err != nil {
-		log.Fatalf("server stopped: %v", err)
-	}
-}
+const defaultFile = "/data/log.txt"
 
 func main() {
-	filePath := os.Getenv("LOG_FILE")
-	if filePath == "" {
-		filePath = defaultFile
-	}
+	filePath := cmp.Or(os.Getenv("LOG_FILE"), defaultFile)
 
-	switch os.Getenv("ROLE") {
+	switch role := os.Getenv("ROLE"); role {
 	case "writer":
 		runWriter(filePath)
 	case "server":
 		runServer(filePath)
 	default:
-		log.Fatal("ROLE must be either \"writer\" or \"server\"")
+		log.Fatalf("ROLE must be either \"writer\" or \"server\", got %q", role)
 	}
 }

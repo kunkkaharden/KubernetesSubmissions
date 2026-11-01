@@ -12,16 +12,9 @@ spec:
       labels:
         app: log-output
     spec:
-      affinity:
-        podAffinity:
-          requiredDuringSchedulingIgnoredDuringExecution:
-            - labelSelector:
-                matchLabels:
-                  app: ping-pong
-              topologyKey: kubernetes.io/hostname
       containers:
         - name: log-writer
-          image: ghcr.io/kunkkaharden/log-output:0.4
+          image: ghcr.io/kunkkaharden/log-output:1.1
           imagePullPolicy: IfNotPresent
           env:
             - name: ROLE
@@ -32,15 +25,15 @@ spec:
             - name: log-data
               mountPath: /data
         - name: log-reader
-          image: ghcr.io/kunkkaharden/log-output:0.4
+          image: ghcr.io/kunkkaharden/log-output:1.1
           imagePullPolicy: IfNotPresent
           env:
             - name: ROLE
               value: "server"
             - name: LOG_FILE
               value: "/data/log.txt"
-            - name: PINGPONG_FILE
-              value: "/data/pingpong.txt"
+            - name: PINGPONG_URL
+              value: "http://ping-pong-svc:3000/pings"
             - name: PORT
               value: "3000"
           volumeMounts:

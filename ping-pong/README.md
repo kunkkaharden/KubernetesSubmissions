@@ -16,6 +16,11 @@ Apply the Kubernetes resources:
 kubectl apply -f manifests/ -R
 ```
 
+Each GET to `/pingpong` (or `/`) increments the in-memory counter and returns
+`pong <count>`. `GET /pings` returns the current count without
+incrementing it; Log output uses this endpoint over the `ping-pong-svc`
+Kubernetes Service.
+
 The `/pingpong` path is routed to this application by the shared Ingress in
-`../log-output/manifests/ingress.yaml`. In Kubernetes, the request count is
-stored in `/data/pingpong.txt` on the shared PersistentVolumeClaim.
+`../log-output/manifests/ingress.yaml`. The count resets when the process
+restarts.

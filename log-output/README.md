@@ -2,9 +2,10 @@
 
 The `log-writer` container generates a random string when it starts and appends
 it with a UTC timestamp to `/data/log.txt` every five seconds. The `log-reader`
-container reads that file and the Ping-pong request count from
-`/data/pingpong.txt`, returning both from `GET /`. Both containers and the
-Ping-pong Pod share a PersistentVolumeClaim.
+container reads that file and gets the Ping-pong request count from
+`http://ping-pong-svc:3000/pings`, returning both from `GET /`.
+The log writer and reader share a PersistentVolumeClaim for the log file; the
+Ping-pong Pod does not use this volume.
 
 Prepare and apply the shared PersistentVolume and claim first. Follow the
 instructions in [`persistent-volume/README.md`](../persistent-volume/README.md).
@@ -13,8 +14,7 @@ instructions in [`persistent-volume/README.md`](../persistent-volume/README.md).
 kubectl apply -f ../persistent-volume/
 ```
 
-Apply Ping-pong before Log output so the latter can be scheduled on the same
-node and share the local hostPath volume:
+Apply Ping-pong and Log output:
 
 ```bash
 kubectl apply -f ../ping-pong/manifests/
