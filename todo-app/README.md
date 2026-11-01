@@ -34,6 +34,7 @@ cluster uses a different node or location.
 Then deploy the backend and the app:
 
 ```bash
+kubectl apply -f ../namespaces/project.yaml
 kubectl apply -f ../todo-backend/manifests/
 kubectl apply -f manifests/
 ```
@@ -44,12 +45,12 @@ with `TODO_BACKEND_URL` in the Deployment.
 To follow the Pod logs in real time:
 
 ```bash
-kubectl logs -l app=todo-app --follow
+kubectl logs -n project -l app=todo-app --follow
 ```
 
 To verify that the image survives a Pod replacement, note the current image,
 delete the Pod, wait for its replacement, and reload the app:
 
 ```bash
-kubectl delete pod -l app=todo-app
+kubectl delete pod -n project -l app=todo-app
 ```

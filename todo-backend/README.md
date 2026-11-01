@@ -38,6 +38,7 @@ curl -X POST localhost:3000/todos -H 'Content-Type: application/json' \
 Apply the resources:
 
 ```bash
+kubectl apply -f ../namespaces/project.yaml
 kubectl apply -f manifests/
 ```
 
@@ -47,6 +48,6 @@ cluster on port `2345`. From inside the cluster it is reachable at
 traffic. To try the API from your machine:
 
 ```bash
-kubectl port-forward svc/todo-backend-svc 2345:2345
+kubectl port-forward -n project svc/todo-backend-svc 2345:2345
 curl localhost:2345/todos
 ```
