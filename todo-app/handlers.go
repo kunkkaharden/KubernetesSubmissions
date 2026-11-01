@@ -16,7 +16,7 @@ var templateFiles embed.FS
 
 var pageTemplate = template.Must(template.ParseFS(templateFiles, "templates/index.html"))
 
-func newHandler(cache *imageCache) http.Handler {
+func newHandler(cache *imageCache, todoProxy http.Handler) http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path != "/" {
@@ -43,5 +43,6 @@ func newHandler(cache *imageCache) http.Handler {
 			log.Printf("write image response: %v", err)
 		}
 	})
+	mux.Handle("/todos", todoProxy)
 	return mux
 }

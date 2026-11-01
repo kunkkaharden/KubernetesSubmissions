@@ -55,6 +55,9 @@
       cursor: pointer;
     }
     .send-button:hover { background: #194832; }
+    .send-button:disabled { background: #78a68b; cursor: wait; }
+    .form-message { min-height: 1.25rem; margin: .25rem 0 .75rem; color: #a33; font-size: .9rem; }
+    .empty-state { margin: 0; padding: 1rem; color: #6b7a70; text-align: center; }
     .todo-list { margin: 0; padding: 0; list-style: none; }
     .todo-item {
       display: flex;
@@ -66,6 +69,7 @@
       background: #fbfdfb;
     }
     .todo-item + .todo-item { margin-top: .75rem; }
+    .todo-item.done span { color: #7d8b81; text-decoration: line-through; }
     .todo-item::before {
       width: 1.1rem;
       height: 1.1rem;
@@ -98,16 +102,82 @@
       <h2 id="image-title">A little inspiration</h2>
       <img src="/image" alt="Random Lorem Picsum image">
     </section>
-    <form class="todo-form">
+    <form class="todo-form" id="todo-form">
       <label for="todo-input" class="visually-hidden">New todo</label>
-      <input class="todo-input" id="todo-input" name="todo" type="text" maxlength="140" placeholder="Write a todo (max 140 characters)">
-      <button class="send-button" type="button">Send</button>
+      <input class="todo-input" id="todo-input" name="todo" type="text" maxlength="140" placeholder="Write a todo (max 140 characters)" required>
+      <button class="send-button" type="submit">Send</button>
     </form>
-    <ul class="todo-list">
-      <li class="todo-item">Learn the basics of Kubernetes</li>
-      <li class="todo-item">Deploy the todo app</li>
-      <li class="todo-item">Take a break and enjoy the view</li>
-    </ul>
+    <p class="form-message" id="form-message" role="status" aria-live="polite"></p>
+    <ul class="todo-list" id="todo-list"></ul>
+    <p class="empty-state" id="empty-state" hidden>No todos yet. Add one above.</p>
   </main>
+  <script>
+    const form = document.getElementById("todo-form");
+    const input = document.getElementById("todo-input");
+    const button = form.querySelector("button");
+    const list = document.getElementById("todo-list");
+    const emptyState = document.getElementById("empty-state");
+    const message = document.getElementById("form-message");
+
+    function showMessage(text) {
+      message.textContent = text;
+    }
+
+    function renderTodos(todos) {
+      list.replaceChildren();
+      for (const todo of todos) {
+        const item = document.createElement("li");
+        item.className = "todo-item";
+        if (todo.done) {
+          item.classList.add("done");
+        }
+        const text = document.createElement("span");
+        text.textContent = todo.text;
+        item.append(text);
+        list.append(item);
+      }
+      emptyState.hidden = todos.length > 0;
+    }
+
+    async function loadTodos() {
+      const response = await fetch("/todos");
+      if (!response.ok) {
+        throw new Error("Could not load todos");
+      }
+      renderTodos(await response.json());
+    }
+
+    async function addTodo(text) {
+      const response = await fetch("/todos", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+      if (!response.ok) {
+        throw new Error("Could not create todo");
+      }
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const text = input.value.trim();
+      if (!text) {
+        return;
+      }
+      button.disabled = true;
+      showMessage("");
+      try {
+        await addTodo(text);
+        input.value = "";
+        await loadTodos();
+      } catch (error) {
+        showMessage(error.message);
+      } finally {
+        button.disabled = false;
+      }
+    });
+
+    loadTodos().catch((error) => showMessage(error.message));
+  </script>
 </body>
 </html>

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"errors"
 	"log"
 	"net/http"
@@ -9,8 +10,9 @@ import (
 )
 
 const (
-	defaultPort     = "8080"
-	defaultCacheDir = "./data"
+	defaultPort       = "8080"
+	defaultCacheDir   = "./data"
+	defaultBackendURL = "http://localhost:8080"
 )
 
 func main() {
@@ -29,9 +31,15 @@ func main() {
 	}
 	cache := newImageCache(cacheDir, fetchImage)
 
+	backendURL := cmp.Or(os.Getenv("TODO_BACKEND_URL"), defaultBackendURL)
+	todoProxy, err := newTodoProxy(backendURL)
+	if err != nil {
+		log.Fatalf("invalid TODO_BACKEND_URL %q: %v", backendURL, err)
+	}
+
 	server := &http.Server{
 		Addr:    ":" + strconv.Itoa(portNumber),
-		Handler: newHandler(cache),
+		Handler: newHandler(cache, todoProxy),
 	}
 
 	log.Printf("Server started on port %d", portNumber)

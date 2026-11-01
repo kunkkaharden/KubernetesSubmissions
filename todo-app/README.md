@@ -7,11 +7,19 @@ was fetched, so the cache also survives a restart. Once the 10 minutes are
 up, the next request downloads and persists a new image. If Picsum is
 unavailable, the last saved image is served instead.
 
-The page includes a todo input limited to 140 characters, a Send button, and
-example todos. The button is not wired up yet, so todos are not submitted or
-saved.
+The page lists the todos stored by the todo backend and has a todo input
+limited to 140 characters. Submitting the form creates the todo through the
+backend and reloads the list.
 
-Run locally:
+Requests to `/todos` are proxied by this server to the URL in
+`TODO_BACKEND_URL`, or `http://localhost:8080`. That way the browser only talks
+to the todo app, so the backend does not need its own Ingress.
+
+Run the backend and then the app locally:
+
+```bash
+cd ../todo-backend && PORT=8080 go run .
+```
 
 ```bash
 PORT=3000 IMAGE_CACHE_DIR=./data go run .
@@ -23,11 +31,15 @@ directory `/mnt/data/todo-app-image-cache` exists on node
 `k3d-k3s-default-agent-0`. Update the PV's node affinity and path if your
 cluster uses a different node or location.
 
-Then apply the resources:
+Then deploy the backend and the app:
 
 ```bash
+kubectl apply -f ../todo-backend/manifests/
 kubectl apply -f manifests/
 ```
+
+The app reaches the backend through the `todo-backend-svc` Service, configured
+with `TODO_BACKEND_URL` in the Deployment.
 
 To follow the Pod logs in real time:
 

@@ -16,13 +16,15 @@ spec:
         fsGroup: 65532
       containers:
         - name: todo-app
-          image: ghcr.io/kunkkaharden/todo-app:0.6
+          image: ghcr.io/kunkkaharden/todo-app:1.1
           imagePullPolicy: Always
           env:
           - name: PORT
             value: "3000"
           - name: IMAGE_CACHE_DIR
             value: /data
+          - name: TODO_BACKEND_URL
+            value: http://todo-backend-svc:2345
           volumeMounts:
           - name: image-cache
             mountPath: /data
