@@ -2,55 +2,21 @@ package main
 
 import (
 	"cmp"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"sync"
+
+	_ "github.com/lib/pq"
 )
 
 const defaultPort = "8080"
 
-type counter struct {
-	mu    sync.Mutex
-	count int
-}
-
-func (c *counter) increment() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	c.count++
-	return c.count
-}
-
-func (c *counter) current() int {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-
-	return c.count
-}
-
-// ping answers with "pong <count>" and increments the counter.
-func ping(c *counter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := fmt.Fprintf(w, "pong %d", c.increment()); err != nil {
-			log.Printf("write ping response: %v", err)
-		}
-	}
-}
-
-// pings answers with the current count without incrementing it.
-func pings(c *counter) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		if _, err := fmt.Fprintln(w, c.current()); err != nil {
-			log.Printf("write pings response: %v", err)
-		}
-	}
-}
-
 func main() {
-	c := &counter{}
+	c, err := connectCounter(databaseURL())
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer c.db.Close()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /{$}", ping(c))
