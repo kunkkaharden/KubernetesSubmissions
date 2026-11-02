@@ -9,16 +9,19 @@ import (
 )
 
 const (
-	defaultPort        = "8080"
-	defaultPingPongURL = "http://ping-pong-svc:3000/pings"
+	defaultPort            = "8080"
+	defaultPingPongURL     = "http://ping-pong-svc:3000/pings"
+	defaultInformationFile = "/config/information.txt"
 )
 
 func runServer(filePath string) {
 	mux := http.NewServeMux()
 	mux.Handle("GET /{$}", logOutputHandler{
-		filePath:    filePath,
-		pingPongURL: cmp.Or(os.Getenv("PINGPONG_URL"), defaultPingPongURL),
-		client:      &http.Client{Timeout: 2 * time.Second},
+		filePath:        filePath,
+		informationPath: cmp.Or(os.Getenv("INFORMATION_FILE"), defaultInformationFile),
+		message:         os.Getenv("MESSAGE"),
+		pingPongURL:     cmp.Or(os.Getenv("PINGPONG_URL"), defaultPingPongURL),
+		client:          &http.Client{Timeout: 2 * time.Second},
 	})
 
 	port := cmp.Or(os.Getenv("PORT"), defaultPort)

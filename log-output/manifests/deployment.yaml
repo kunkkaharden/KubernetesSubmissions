@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: log-writer
-          image: ghcr.io/kunkkaharden/log-output:1.1
+          image: ghcr.io/kunkkaharden/log-output:1.2
           imagePullPolicy: IfNotPresent
           env:
             - name: ROLE
@@ -26,7 +26,7 @@ spec:
             - name: log-data
               mountPath: /data
         - name: log-reader
-          image: ghcr.io/kunkkaharden/log-output:1.1
+          image: ghcr.io/kunkkaharden/log-output:1.2
           imagePullPolicy: IfNotPresent
           env:
             - name: ROLE
@@ -37,10 +37,24 @@ spec:
               value: "http://ping-pong-svc:3000/pings"
             - name: PORT
               value: "3000"
+            - name: MESSAGE
+              valueFrom:
+                configMapKeyRef:
+                  name: log-output-config
+                  key: MESSAGE
           volumeMounts:
             - name: log-data
               mountPath: /data
+            - name: config
+              mountPath: /config
+              readOnly: true
       volumes:
         - name: log-data
           persistentVolumeClaim:
             claimName: shared-data
+        - name: config
+          configMap:
+            name: log-output-config
+            items:
+              - key: information.txt
+                path: information.txt

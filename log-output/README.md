@@ -3,7 +3,9 @@
 The `log-writer` container generates a random string when it starts and appends
 it with a UTC timestamp to `/data/log.txt` every five seconds. The `log-reader`
 container reads that file and gets the Ping-pong request count from
-`http://ping-pong-svc:3000/pings`, returning both from `GET /`.
+`http://ping-pong-svc:3000/pings`. It also reads `information.txt` from a
+ConfigMap volume and returns the file contents, the `MESSAGE` environment
+variable, the log, and the count from `GET /`.
 The log writer and reader share a PersistentVolumeClaim for the log file; the
 Ping-pong Pod does not use this volume.
 
