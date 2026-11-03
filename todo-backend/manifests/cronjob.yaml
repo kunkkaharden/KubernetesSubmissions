@@ -1,0 +1,27 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: random-wikipedia-todo
+  namespace: project
+spec:
+  schedule: "0 * * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: random-wikipedia-todo
+              image: docker.io/curlimages/curl:8.10.1
+              command:
+                - /bin/sh
+                - -c
+                - |
+                  url=$(curl -fsS -o /dev/null -w '%{redirect_url}' https://en.wikipedia.org/wiki/Special:Random)
+                  if [ -z "$url" ]; then
+                    echo "Wikipedia did not return a random article URL" >&2
+                    exit 1
+                  fi
+                  curl -fsS -X POST http://todo-backend-svc:2345/todos \
+                    -H 'Content-Type: application/json' \
+                    --data "{\"text\":\"Read ${url}\"}"
