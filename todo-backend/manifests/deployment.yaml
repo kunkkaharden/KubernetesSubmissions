@@ -15,8 +15,11 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: ghcr.io/kunkkaharden/todo-backend:1.1
+          image: ghcr.io/kunkkaharden/todo-backend:1.2
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT
               value: "3000"
+          envFrom:
+            - secretRef:
+                name: postgres-secret

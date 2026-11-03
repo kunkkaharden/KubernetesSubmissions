@@ -1,7 +1,10 @@
 # Todo backend
 
-A small HTTP API for todos. The server listens on the port in `PORT`, or
-`8080`. Todos are kept in memory, so they are lost when the process restarts.
+A small HTTP API for todos. Todos are stored in Postgres, so they survive
+application restarts. The
+server port and database connection are configured with the required `PORT`,
+`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`, `DB_HOST`, `DB_PORT` and
+`DB_SSLMODE` environment variables.
 
 ## Endpoints
 
@@ -23,8 +26,12 @@ A small HTTP API for todos. The server listens on the port in `PORT`, or
 
 ## Run locally
 
+Run with a Postgres database available at the configured address:
+
 ```bash
-PORT=3000 go run .
+PORT=3000 DB_HOST=localhost DB_PORT=5432 DB_SSLMODE=disable \
+POSTGRES_USER=postgres POSTGRES_PASSWORD=postgres POSTGRES_DB=todos \
+go run .
 ```
 
 ```bash
@@ -41,6 +48,12 @@ Apply the resources:
 kubectl apply -f ../namespaces/project.yaml
 kubectl apply -f manifests/
 ```
+
+The `postgres` StatefulSet has one replica and a persistent volume claim.
+Both Postgres and the backend read the database configuration and credentials
+from the `postgres-secret` Secret through `envFrom`. The backend validates this
+configuration at startup
+and waits for the database to become available before starting its HTTP server.
 
 The `todo-backend-svc` Service exposes the backend to other Pods in the
 cluster on port `2345`. From inside the cluster it is reachable at

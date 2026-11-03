@@ -1,24 +1,32 @@
 package main
 
 import (
-	"cmp"
 	"errors"
 	"log"
 	"net/http"
-	"os"
+	"strconv"
+
+	_ "github.com/lib/pq"
 )
 
-const defaultPort = "8080"
-
 func main() {
-	port := cmp.Or(os.Getenv("PORT"), defaultPort)
-
-	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: newHandler(newTodoStore()),
+	settings, err := loadConfig()
+	if err != nil {
+		log.Fatalf("invalid configuration: %v", err)
 	}
 
-	log.Printf("Server started on port %s", port)
+	store, err := connectTodoStore(settings.databaseURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer store.db.Close()
+
+	server := &http.Server{
+		Addr:    ":" + strconv.Itoa(settings.port),
+		Handler: newHandler(store),
+	}
+
+	log.Printf("Server started on port %d", settings.port)
 	if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("server stopped: %v", err)
 	}

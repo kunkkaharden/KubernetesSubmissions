@@ -23,7 +23,14 @@ func newHandler(store *todoStore) http.Handler {
 
 func listTodos(store *todoStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		writeJSON(w, http.StatusOK, store.list())
+		todos, err := store.list(r.Context())
+		if err != nil {
+			log.Printf("list todos: %v", err)
+			http.Error(w, "database unavailable", http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, http.StatusOK, todos)
 	}
 }
 
@@ -47,7 +54,14 @@ func createTodo(store *todoStore) http.HandlerFunc {
 			return
 		}
 
-		writeJSON(w, http.StatusCreated, store.add(text))
+		t, err := store.add(r.Context(), text)
+		if err != nil {
+			log.Printf("create todo: %v", err)
+			http.Error(w, "database unavailable", http.StatusInternalServerError)
+			return
+		}
+
+		writeJSON(w, http.StatusCreated, t)
 	}
 }
 
