@@ -64,3 +64,13 @@ traffic. To try the API from your machine:
 kubectl port-forward -n project svc/todo-backend-svc 2345:2345
 curl localhost:2345/todos
 ```
+
+## Logs in Grafana
+To review the exercise, also check the `/monitoring` directory.
+
+The monitoring configuration sends Pod logs to Loki, and Grafana already has a
+Loki data source. In **Explore**, select **Loki** and use this LogQL query:
+
+```logql
+{namespace="project"}"
+```

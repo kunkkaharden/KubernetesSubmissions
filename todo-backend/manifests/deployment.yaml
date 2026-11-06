@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: todo-backend
-          image: ghcr.io/kunkkaharden/todo-backend:1.2
+          image: ghcr.io/kunkkaharden/todo-backend:1.3
           imagePullPolicy: IfNotPresent
           env:
             - name: PORT

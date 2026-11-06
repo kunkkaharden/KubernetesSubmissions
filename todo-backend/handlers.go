@@ -49,10 +49,13 @@ func createTodo(store *todoStore) http.HandlerFunc {
 			http.Error(w, "Todo text is required", http.StatusBadRequest)
 			return
 		}
-		if utf8.RuneCountInString(text) > maxTodoLength {
+		if length := utf8.RuneCountInString(text); length > maxTodoLength {
+			log.Printf("Rejected todo (%d characters, maximum %d): %q", length, maxTodoLength, text)
 			http.Error(w, "Todo text must be at most 140 characters", http.StatusBadRequest)
 			return
 		}
+
+		log.Printf("Received todo: %q", text)
 
 		t, err := store.add(r.Context(), text)
 		if err != nil {
