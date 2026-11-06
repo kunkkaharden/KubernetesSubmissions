@@ -4,7 +4,7 @@ metadata:
   name: shared-data
   namespace: exercises
 spec:
-  storageClassName: ping-pong-shared
+  storageClassName: local-path
   accessModes:
     - ReadWriteOnce
   resources:
