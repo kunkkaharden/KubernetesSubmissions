@@ -4,7 +4,7 @@ metadata:
   name: todo-app-image-cache
   namespace: project
 spec:
-  storageClassName: todo-app-local
+  storageClassName: local-path
   accessModes:
     - ReadWriteOnce
   resources:
