@@ -17,7 +17,7 @@ spec:
         fsGroup: 65532
       containers:
         - name: todo-app
-          image: ghcr.io/kunkkaharden/todo-app:1.2
+          image: registry-docker-registry-ui-registry.registry.svc.cluster.local:5000/todo-app:1.2
           imagePullPolicy: Always
           envFrom:
           - configMapRef:
