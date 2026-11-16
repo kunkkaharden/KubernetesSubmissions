@@ -1,0 +1,16 @@
+apiVersion: v2
+name: docker-registry-ui
+description: Helm chart for joxit/docker-registry-ui, a web UI for the Docker Registry v2 API
+type: application
+version: 0.1.0
+appVersion: "main"
+home: https://github.com/Joxit/docker-registry-ui
+sources:
+  - https://github.com/Joxit/docker-registry-ui
+  - https://hub.docker.com/r/joxit/docker-registry-ui
+keywords:
+  - docker
+  - registry
+  - registry-ui
+maintainers:
+  - name: Farmhub Team

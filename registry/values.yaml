@@ -1,0 +1,69 @@
+nameOverride: ""
+fullnameOverride: ""
+
+ui:
+  image:
+    repository: joxit/docker-registry-ui
+    pullPolicy: IfNotPresent
+    tag: "main"
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  ingress:
+    enabled: false
+
+  resources: {}
+  # limits:
+  #   cpu: 200m
+  #   memory: 256Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+  config:
+    registryTitle: "Kubernetes Submissions Container Registry UI"
+    deleteImages: true
+    singleRegistry: true
+    showContentDigest: true
+    showCatalogNbTags: true
+    catalogMinBranches: 1
+    catalogMaxBranches: 1
+    taglistPageSize: 100
+    registrySecured: false
+    catalogElementsLimit: 1000
+    
+
+  extraEnv: []
+  # - name: FOO
+  #   value: bar
+
+registry:
+  image:
+    repository: registry
+    pullPolicy: IfNotPresent
+    tag: "2.8.2"
+
+  service:
+    port: 5000
+
+  deleteEnabled: true
+
+  auth:
+    enabled: false
+
+  persistence:
+    enabled: true
+    size: 10Gi
+    storageClassName: ""
+
+
+  cors:
+    allowOrigin: "https://registry.farmhub.shop"
+    allowMethods: "HEAD,GET,OPTIONS,DELETE"
+    allowCredentials: true
+    allowHeaders: "Authorization,Accept,Cache-Control"
+    exposeHeaders: "Docker-Content-Digest"
+
+  resources: {}

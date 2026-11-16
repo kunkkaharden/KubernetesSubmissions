@@ -1,0 +1,68 @@
+name: Todo backend CI/CD
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - "todo-backend/**"
+      - "todo-stack/todo-backend/**"
+      - ".github/workflows/todo-backend.yml"
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  changes:
+    runs-on: kubernetes-submissions
+    outputs:
+      todo_backend: ${{ steps.filter.outputs.todo_backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            todo_backend:
+              - 'todo-backend/**'
+              - 'todo-stack/todo-backend/**'
+
+  build-todo-backend:
+    needs: changes
+    if: needs.changes.outputs.todo_backend == 'true'
+    runs-on: kubernetes-submissions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: ./todo-backend
+          push: true
+          tags: ghcr.io/kunkkaharden/todo-backend:${{ github.sha }}
+
+  deploy-todo-backend:
+    needs: [changes, build-todo-backend]
+    if: needs.changes.outputs.todo_backend == 'true'
+    runs-on: kubernetes-submissions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/setup-kubectl@v4
+        with:
+          version: v1.31.0
+      - uses: imranismail/setup-kustomize@v2
+        with:
+          kustomize-version: 5.4.2
+      - name: Deploy todo-backend
+        env:
+          IMAGE_TAG: ghcr.io/kunkkaharden/todo-backend:${{ github.sha }}
+        run: |-
+          cd todo-stack/todo-backend
+          kustomize edit set image ghcr.io/kunkkaharden/todo-backend=$IMAGE_TAG
+          kustomize build . | kubectl apply -f -
+          kubectl rollout status deployment/todo-backend --namespace project
+          kubectl get services --namespace project -o wide

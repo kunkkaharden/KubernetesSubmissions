@@ -1,0 +1,9 @@
+githubConfigUrl: https://github.com/kunkkaharden/KubernetesSubmissions
+githubConfigSecret: github-actions-auth
+
+runnerScaleSetName: kubernetes-submissions
+minRunners: 0
+maxRunners: 4
+
+containerMode:
+  type: dind

@@ -1,0 +1,14 @@
+{{- if .Values.ui.ingress.enabled }}
+1. Open the UI:
+  http://{{ .Values.ui.ingress.host }}
+{{- else }}
+1. To access the UI from your machine, run:
+  kubectl port-forward svc/{{ include "docker-registry-ui.fullname" . }}-ui 8080:{{ .Values.ui.service.port }}
+   Then open http://127.0.0.1:8080
+{{- end }}
+
+2. The Registry ({{ .Values.registry.image.repository }}:{{ .Values.registry.image.tag }}) is internal-only.
+   Its Service is {{ include "docker-registry-ui.fullname" . }}-registry:{{ .Values.registry.service.port }}
+   in namespace {{ .Release.Namespace }}; no Ingress is configured for it.
+   The UI proxies browser requests to the Registry using NGINX_PROXY_PASS_URL.
+   Docker clients must connect to the Registry Service directly, not to the UI Service.

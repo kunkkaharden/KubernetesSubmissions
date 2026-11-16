@@ -1,0 +1,62 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docker-registry-ui.fullname" . }}-ui
+  labels:
+    {{- include "docker-registry-ui.componentLabels" (list . "ui") | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      {{- include "docker-registry-ui.componentLabels" (list . "ui") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "docker-registry-ui.componentLabels" (list . "ui") | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.ui.image.repository }}:{{ .Values.ui.image.tag }}"
+          imagePullPolicy: {{ .Values.ui.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: 80
+              protocol: TCP
+          env:
+            - name: NGINX_PROXY_PASS_URL
+              value: "http://{{ include "docker-registry-ui.fullname" . }}-registry:{{ .Values.registry.service.port }}"
+            {{- with .Values.ui.config.registryTitle }}
+            - name: REGISTRY_TITLE
+              value: {{ . | quote }}
+            {{- end }}
+            - name: SINGLE_REGISTRY
+              value: {{ .Values.ui.config.singleRegistry | quote }}
+            - name: DELETE_IMAGES
+              value: {{ .Values.ui.config.deleteImages | quote }}
+            - name: SHOW_CONTENT_DIGEST
+              value: {{ .Values.ui.config.showContentDigest | quote }}
+            - name: SHOW_CATALOG_NB_TAGS
+              value: {{ .Values.ui.config.showCatalogNbTags | quote }}
+            - name: CATALOG_MIN_BRANCHES
+              value: {{ .Values.ui.config.catalogMinBranches | quote }}
+            - name: CATALOG_MAX_BRANCHES
+              value: {{ .Values.ui.config.catalogMaxBranches | quote }}
+            - name: TAGLIST_PAGE_SIZE
+              value: {{ .Values.ui.config.taglistPageSize | quote }}
+            - name: REGISTRY_SECURED
+              value: {{ .Values.ui.config.registrySecured | quote }}
+            - name: CATALOG_ELEMENTS_LIMIT
+              value: {{ .Values.ui.config.catalogElementsLimit | quote }}
+            {{- with .Values.ui.extraEnv }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.ui.resources | nindent 12 }}

@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docker-registry-ui.fullname" . }}-registry
+  labels:
+    {{- include "docker-registry-ui.componentLabels" (list . "registry") | nindent 4 }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "docker-registry-ui.componentLabels" (list . "registry") | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "docker-registry-ui.componentLabels" (list . "registry") | nindent 8 }}
+    spec:
+      containers:
+        - name: registry
+          image: "{{ .Values.registry.image.repository }}:{{ .Values.registry.image.tag }}"
+          imagePullPolicy: {{ .Values.registry.image.pullPolicy }}
+          ports:
+            - name: registry
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: REGISTRY_STORAGE_DELETE_ENABLED
+              value: {{ .Values.registry.deleteEnabled | quote }}
+            {{- if .Values.registry.auth.enabled }}
+            - name: REGISTRY_AUTH
+              value: htpasswd
+            - name: REGISTRY_AUTH_HTPASSWD_REALM
+              value: {{ .Values.registry.auth.realm | quote }}
+            - name: REGISTRY_AUTH_HTPASSWD_PATH
+              value: /auth/htpasswd
+            {{- end }}
+            {{- with .Values.registry.cors.allowOrigin }}
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Origin
+              value: {{ printf "[%s]" . | quote }}
+            {{- end }}
+            {{- with .Values.registry.cors.allowMethods }}
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Methods
+              value: {{ printf "[%s]" . | quote }}
+            {{- end }}
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Credentials
+              value: {{ printf "[%v]" .Values.registry.cors.allowCredentials | quote }}
+            {{- with .Values.registry.cors.allowHeaders }}
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Allow-Headers
+              value: {{ printf "[%s]" . | quote }}
+            {{- end }}
+            {{- with .Values.registry.cors.exposeHeaders }}
+            - name: REGISTRY_HTTP_HEADERS_Access-Control-Expose-Headers
+              value: {{ printf "[%s]" . | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/registry
+            {{- if .Values.registry.auth.enabled }}
+            - name: htpasswd
+              mountPath: /auth
+              readOnly: true
+            {{- end }}
+          livenessProbe:
+            tcpSocket:
+              port: registry
+          readinessProbe:
+            tcpSocket:
+              port: registry
+          resources:
+            {{- toYaml .Values.registry.resources | nindent 12 }}
+      volumes:
+        - name: data
+          {{- if .Values.registry.persistence.enabled }}
+          persistentVolumeClaim:
+            claimName: {{ include "docker-registry-ui.fullname" . }}-registry
+          {{- else }}
+          emptyDir: {}
+          {{- end }}
+        {{- if .Values.registry.auth.enabled }}
+        - name: htpasswd
+          secret:
+            secretName: {{ .Values.registry.auth.existingSecret }}
+        {{- end }}
